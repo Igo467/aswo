@@ -10,33 +10,41 @@ import Image from "next/image";
 import { FaShoppingCart } from "react-icons/fa";
 import Basket from "../../components/Basket/Basket";
 import { useLocalStorage } from "react-use";
-import { useUserContext } from "../(Context)/store";
+import { useUserContext } from "../context/page";
 
 export default function Page() {
   const { setUserId } = useUserContext();
   const [onCategori, setOnCategori] = useLocalStorage("onCategori", []);
-  //   const [onCard, setOnCard] = useLocalStorage("onCard", []);
-  //   const [onCard, setOnCard] = useState([]);
-
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 20000]);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [flutters, setFlutters] = useState(null);
+  const [flutters, setFlutters] = useState([]);
   const [cehage, setCehage] = useState(false);
   const [cehageCor, setCehageCor] = useState(false);
 
+  const sortByValueAscending = () => {
+    const sortedArray = [...filteredProducts].sort((a, b) => a.price - b.price);
+    setFilteredProducts(sortedArray);
+  };
+
+  const sortByValueDescending = () => {
+    const sortedArray = [...filteredProducts].sort((a, b) => b.price - a.price);
+    setFilteredProducts(sortedArray);
+  };
   const addToArray = (newItem) => {
     setUserId(newItem);
   };
+
   //   useEffect(() => {
   //     setUserId("55555");
   //   }, []);
-
+  console.log(filteredProducts);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch(`api/categori/${onCategori}`);
         const data = await response.json();
         setFlutters(data);
+        setFilteredProducts(data);
       } catch (error) {
         console.log("Что-то пошло не так...", error);
       } finally {
@@ -47,7 +55,7 @@ export default function Page() {
   }, [onCategori]);
   const handleSliderChange = (value) => {
     setPriceRange(value);
-    const filtered = priceRange.filter(
+    const filtered = flutters.filter(
       (product) => product.price >= value[0] && product.price <= value[1]
     );
     setFilteredProducts(filtered);
@@ -63,10 +71,7 @@ export default function Page() {
   const handleBasketClick = (e, object) => {
     // Ваша логика обработки клика на корзине
     addToArray(object);
-    //   setOnCard1([]);
-    //  setOnCard([]);
     setCehageCor(true);
-    //  setCeh(object);
     // Остановить всплытие события, чтобы не срабатывал клик на боксе
     e.stopPropagation();
   };
@@ -77,18 +82,22 @@ export default function Page() {
     <div className={styles.main}>
       {cehageCor && <Basket fals={fals} />}
       <div className={styles.main_h1_box} id="myBox" onClick={handleBoxClick}>
-        <div className={styles.main_h1}>Пускова кнопка для бетономішалки</div>
+        <div className={styles.main_h1}>{onCategori}</div>
         <div className={styles.main_h2}>
           <div className={styles.main_sort}>Сортування:</div>
           <div className={styles.main_p_box}>
-            <div className={styles.main_p1}>спочатку дешевше</div>
-            <div className={styles.main_p2}>спочатку дорожчі</div>
+            <div className={styles.main_p1} onClick={sortByValueAscending}>
+              спочатку дешевше
+            </div>
+            <div className={styles.main_p2} onClick={sortByValueDescending}>
+              спочатку дорожчі
+            </div>
           </div>
           <div className={styles.reflection_box}>
             <div className={styles.reflection}>Відображення:</div>
             <div className={styles.reflection_icon}>
-              <HiSquares2X2 />
-              <BsCardList />
+              <HiSquares2X2 className={styles.reflection_icon1} size={20} />
+              <BsCardList className={styles.reflection_icon2} size={20} />
             </div>
           </div>
         </div>
@@ -105,10 +114,11 @@ export default function Page() {
               <Slider
                 range
                 min={0}
-                max={100}
+                max={20000}
                 step={1}
                 value={priceRange}
                 onChange={handleSliderChange}
+                className={styles.slider_el}
               />
             </div>
           </div>
@@ -127,8 +137,8 @@ export default function Page() {
             <div className={styles.right_h2}>Замовлення</div>
           </div>
           <div className={styles.right_goods_box}>
-            {Array.isArray(flutters) &&
-              flutters.map((item, index) => (
+            {Array.isArray(filteredProducts) &&
+              filteredProducts.map((item, index) => (
                 <div
                   className={styles.swiper_slide}
                   key={index}
